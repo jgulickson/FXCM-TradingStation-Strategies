@@ -66,4 +66,4 @@ Proof of concept to facilitate of push notifications for trading, account and of
                   
 ###### 1.4.07122016
 - ***Cosmetic release***
-- Usabiliy and verbiage improvements
+- Usability and verbiage improvements
