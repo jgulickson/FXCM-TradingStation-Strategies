@@ -2,7 +2,7 @@
 
 ## Overview
 #### Summary
-Repository contains one (1) trading strategies and two (2) non-trading strategies written in Lua and intended to be executed using [FXCM Trading Station](https://www.fxcm.com/uk/platforms/trading-station/innovative-platform/); all three were originally created as proof of concepts. FXCM Trading Station is a financial trading application written for Windows that can leverage scripts written in Lua (and JavaScript) via [Indicore SDK](http://www.fxcodebase.com/bin/products/IndicoreSDK/3.3.0/help/Lua/web-content.html) to further extend functionality.
+Repository contains one (1) trading strategy and two (2) non-trading strategies written in Lua and intended to be executed using [FXCM Trading Station](https://www.fxcm.com/uk/platforms/trading-station/innovative-platform/); all three were originally created as proof of concepts. FXCM Trading Station is a financial trading application written for Windows that can leverage scripts written in Lua (and JavaScript) via [Indicore SDK](http://www.fxcodebase.com/bin/products/IndicoreSDK/3.3.0/help/Lua/web-content.html) to further extend functionality.
 
 ###### Hue Lights Control
 Proof of concept to control [Philips Hue](http://www2.meethue.com/en-us/) Lights based on trading activity.
@@ -74,7 +74,6 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM post
 #### FXCM To Oanda Trade Copier
 ###### 1.0.01302017
 - ***Initial release***
-- Initial release; proof of concept.
 
 ###### 1.1.02022017
 - ***Feature release***
@@ -94,5 +93,4 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM post
 
 ###### 1.4.03192017
 - ***Cosmetic release***
-- Cosmetic clean up
 - Removed hardcoded values to make Github ready
