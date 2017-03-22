@@ -2,13 +2,16 @@
 
 ## Overview
 #### Summary
-Repository contains two (2) non-trading strategies written in Lua and intended to be executed using [FXCM Trading Station](https://www.fxcm.com/uk/platforms/trading-station/innovative-platform/); both were originally created as proof of concepts. FXCM Trading Station is a financial trading application written for Windows that can leverage scripts written in Lua (and JavaScript) via [Indicore SDK](http://www.fxcodebase.com/bin/products/IndicoreSDK/3.3.0/help/Lua/web-content.html) to further extend functionality.
+Repository contains one (1) trading strategies and two (2) non-trading strategies written in Lua and intended to be executed using [FXCM Trading Station](https://www.fxcm.com/uk/platforms/trading-station/innovative-platform/); all three were originally created as proof of concepts. FXCM Trading Station is a financial trading application written for Windows that can leverage scripts written in Lua (and JavaScript) via [Indicore SDK](http://www.fxcodebase.com/bin/products/IndicoreSDK/3.3.0/help/Lua/web-content.html) to further extend functionality.
 
 ###### Hue Lights Control
 Proof of concept to control [Philips Hue](http://www2.meethue.com/en-us/) Lights based on trading activity.
 
 ###### Push Notifications
 Proof of concept to facilitate of push notifications for trading, account and offer activity.
+
+###### FXCM To Oanda Trade Copier
+Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM postions are sourced from FXCM Trading Station directly and Oanda positions verified and modified via RESTful API queries.  (Requires JSON.lua.)
 
 ## **Installation**
 1. Clone or download desired *.lua files from this repository.
@@ -67,3 +70,29 @@ Proof of concept to facilitate of push notifications for trading, account and of
 ###### 1.4.07122016
 - ***Cosmetic release***
 - Usability and verbiage improvements
+
+#### FXCM To Oanda Trade Copier
+###### 1.0.01302017
+- ***Initial release***
+- Initial release; proof of concept.
+
+###### 1.1.02022017
+- ***Feature release***
+- Performance improvements and cosmetic code updates
+- Added ParseResponse() function to parse LUA tables for eventual validation of responses from Oanda.
+- Added CreatePriceBounds() function to use in CreateOrder() to support Oanda's priceBounds parameter (FXCM's market range equivalent).
+- Added PositionCheck() function; currently not functional.
+- Updated log method for improved troubleshooting.  Went from 'Host:trace' to a custom 'WriteToLog:debug' funtion.
+
+###### 1.2.02032017
+- ***Feature release***
+- Completed PositionCheck() function, now functional
+
+###### 1.3.02272017
+- ***Feature release***
+- Added email notifications
+
+###### 1.4.03192017
+- ***Cosmetic release***
+- Cosmetic clean up
+- Removed hardcoded values to make Github ready
