@@ -1,7 +1,7 @@
 ---------------------------------------- Overview ------------------------------------------
 -- Name:                  FXCM To Oanda Trade Copier
 -- Notes:                 Copyright (c) 2017 Jeremy Gulickson
--- Version:               1.4.03192017
+-- Version:               2.0.04122017
 -- Format:                major.minor.mmddyyyy
 -- 
 -- Usage:                 Designed to copy postion(s) from an FXCM account to an Oanda account.
@@ -37,6 +37,9 @@
 --
 -- v1.4.03192017:         -> Cosmetic clean up; removed hardcoded values to make Github ready.
 --
+-- v2.0.04122017:         -> Added email notifications for order execution.
+--                        -> Updated select defaut values.
+--
 --------------------------------------------------------------------------------------------
 
 
@@ -66,7 +69,8 @@ Oanda.MaxPostionCheckAttempts= nil;
 -- Global FXCM variables
 local FXCM = {};
 FXCM.AccountID = nil;
-FXCM.SendEmail = nil;
+FXCM.SendEmailOrderExecution = nil;
+FXCM.SendEmailStrategyFailure = nil;
 FXCM.EmailAddress = nil;
 	
 -- Global Timer variables
@@ -95,18 +99,19 @@ function Init()
     strategy.parameters:addString("APIToken", "API Token", "Enter the Oanda API token.", "");
 	strategy.parameters:addString("OandaAccountID", "Account ID", "Enter the Oanda account id to trade.", "");
 	strategy.parameters:addDouble("AllowedSlippageInPips", "Allowed Slippage Range", "Enter allowed slippage in pips.", 5, 0, 100);
-	strategy.parameters:addInteger("MaxOrderAttempts", "Maximum Order Attempts", "Enter the maximum attempts to resend an order before stopping the stratey.", 5, 0, 10);
-	strategy.parameters:addInteger("MaxPostionCheckAttempts", "Maximum Position Check Attempts", "Enter the maximum position check attempts before stopping the stratey.", 5, 0, 10);
+	strategy.parameters:addInteger("MaxOrderAttempts", "Maximum Order Attempts", "Enter the maximum attempts to resend an order before stopping the stratey.", 5, 1, 10);
+	strategy.parameters:addInteger("MaxPostionCheckAttempts", "Maximum Position Check Attempts", "Enter the maximum position check attempts before stopping the stratey.", 5, 1, 10);
 	
 	strategy.parameters:addGroup("Notification Related");
-	strategy.parameters:addBoolean("SendEmail", "Send Email", "Send an email if strategy fails.", false);
+	strategy.parameters:addBoolean("SendEmailOrderExecution", "Send Email On Order Execution", "Send an email on order execution.", true);
+	strategy.parameters:addBoolean("SendEmailStrategyFailure", "Send Email On Failure", "Send an email if strategy fails.", true);
 	strategy.parameters:addString("EmailAddress", "Email Address", "Enter the recipient address to email.", "");
 	strategy.parameters:setFlag("EmailAddress", core.FLAG_EMAIL);
 	
 	strategy.parameters:addGroup("Risk Related");
 	strategy.parameters:addBoolean("RunHealthCheck", "Health Check", "Perform a health check on startup.", true);
 	strategy.parameters:addBoolean("PositionCheck", "Position Check", "Perform a postion check between brokers at set intervals.", true);
-	strategy.parameters:addInteger("PositionCheckInterval", "Positions Check Interval", "Enter time between positions checks in minutes.", 5, 0, 60);
+	strategy.parameters:addInteger("PositionCheckInterval", "Positions Check Interval", "Enter time between positions checks in minutes.", 30, 5, 120);
 	
 	strategy.parameters:addGroup("Log Related");
 	strategy.parameters:addInteger("LogLevel", "Log Level", "Determines what informaton to write to an external log.", 0);
@@ -136,11 +141,13 @@ function Prepare()
 	Oanda.AllowedSlippageInPips = instance.parameters.AllowedSlippageInPips;
 	Oanda.MaxOrderAttempts = instance.parameters.MaxOrderAttempts;
 	Oanda.MaxPostionCheckAttempts = instance.parameters.MaxPostionCheckAttempts;
-	FXCM.SendEmail = instance.parameters.SendEmail;
+	FXCM.SendEmailOrderExecution = instance.parameters.SendEmailOrderExecution;
+	FXCM.SendEmailStrategyFailure = instance.parameters.SendEmailStrategyFailure;
 	FXCM.EmailAddress = instance.parameters.EmailAddress;
 	
-	WriteToLog = Logger:create("Marketscope-Log", instance.parameters.LogLevel);
 	instance:name("FXCM (" .. FXCM.AccountID .. ") to Oanda (" .. Oanda.AccountID .. ")");
+	
+	WriteToLog = Logger:create("Marketscope-Log", instance.parameters.LogLevel);
 	if instance.parameters.RunHealthCheck then Timer.HealthCheck = Host:execute("setTimer", 100, 2) end
 	if instance.parameters.PositionCheck then Timer.PositionCheckInterval = Host:execute("setTimer", 200, instance.parameters.PositionCheckInterval * 60) end
 	Host:execute("subscribeTradeEvents", 300, "trades");
@@ -166,14 +173,12 @@ function HealthCheck(oInstrument)
 	
 	local zURL = nil;
 	local zRequestReponse = nil;
-	local zPass = nil;
+	local zPass = true;
 	
 	WriteToLog:debug("FXCM Account ID: ".. FXCM.AccountID);
 	WriteToLog:debug("Oanda API Token: " .. Oanda.APIToken);
 	WriteToLog:debug("Oanda Account ID: " .. Oanda.AccountID);
 
-	local zPass = true;
-	
 	-- Get Accounts
 	zURL = CreateURLSyntax("Account", "GET_Accounts", Oanda.Subdomain, Oanda.AccountID, nil, nil, nil);
 	zRequestReponse = SendRequest("GET", zURL, nil, Oanda.APIToken);
@@ -312,22 +317,20 @@ end
 function FindTrade(oMessage, oMessage1, oMessage2)
 	WriteToLog:info("FindTrade() >>>>> STARTING >>>>> STARTING >>>>>");
 	local zTrade = {};
-	local zPass = nil;
+	local zPass = false;
 	
-	zPass = true;
-
 	-- http://www.fxcodebase.com/bin/products/IndicoreSDK/3.1.0/help/Lua/TTTrades.html
 	if Host:findTable("trades"):find("OpenOrderID", oMessage1) ~= nil then
 		zTrade.Row = Host:findTable("trades"):find("OpenOrderID", oMessage1);
 		WriteToLog:debug("FindTrade() Finished | Ticket: " .. oMessage .. "; Order: " .. oMessage1 .. "; Direction: " .. zTrade.Row.BS .. "; Symbol: " .. zTrade.Row.Instrument .. "; Units: " .. zTrade.Row.Lot);
 		CreateOrder(zTrade.Row.Instrument, zTrade.Row.Lot, zTrade.Row.BS);
+		zPass = true;
 	-- http://www.fxcodebase.com/bin/products/IndicoreSDK/3.1.0/help/Lua/TTClosedTrades.html
 	elseif Host:findTable("closed trades"):find("CloseOrderID", oMessage1) ~= nil then
 		zTrade.Row = Host:findTable("closed trades"):find("CloseOrderID", oMessage1);
 		WriteToLog:debug("FindTrade() Finished | Ticket: " .. oMessage .. "; Order: " .. oMessage1 .. "; Direction: " .. zTrade.Row.BS .. "; Symbol: " .. zTrade.Row.Instrument .. "; Units: " .. zTrade.Row.Lot);
 		CreateOrder(zTrade.Row.Instrument, zTrade.Row.Lot, FlipDirection(zTrade.Row.BS));
-	else
-		zPass = false;
+		zPass = true;
 	end
 	
 	if zPass then
@@ -353,14 +356,13 @@ function CreateOrder(oInstrument, oSize, oDirection)
 	local zURL = nil;
 	local zOrderSyntax = nil;
 	local zRequestReponse = nil;
-	local zPass = nil;
+	local zPass = false;
 	
 	-- Default Values
 	zOrder.TimeInForce = "FOK"
 	zOrder.OrderType = "MARKET"
 	zOrder.PositionFill = "REDUCE_FIRST"
 	zOrder.AttemptNumber = 1;
-	zPass = false;
 	
 	while zOrder.AttemptNumber <= Oanda.MaxOrderAttempts and zPass == false do
 		zOrder.PriceBound = CreatePriceBounds(oInstrument, oDirection, Oanda.AllowedSlippageInPips);
@@ -381,7 +383,8 @@ function CreateOrder(oInstrument, oSize, oDirection)
 	if zPass then
 		WriteToLog:debug("CreateOrder() Finished | " .. zRequestReponse);
 		WriteToLog:info("CreateOrder() <<<<< FINISHED <<<<< FINISHED <<<<<");
-		SendNotification("Trace", oInstrument, 0, "CreateOrder() Successful | Strategy OK", core.now());
+		SendNotification("Trace", oInstrument, 0, "CreateOrder() Successful | Strategy OK", core.now());		
+		SendNotification("OrderExecution", oInstrument, 0, oDirection ..  " " .. Format_Thousands(oSize, 0) .. " " .. oInstrument .. " order succesfully opened on ", core.now());
 	else
 		WriteToLog:error("CreateOrder() Failed");
 		SendNotification("All", oInstrument, 0, "CreateOrder() Failed | Strategy Stopped", core.now());
@@ -938,13 +941,18 @@ function SendNotification(oType, oSymbol, oOpen, oMessage, oTime)
 	elseif oType == "Trace" then
 		Host:trace(oMessage);
 	elseif oType == "StartEmail" then
-		if FXCM.SendEmail then
+		if FXCM.SendEmailOrderExecution then
 			terminal:alertEmail(FXCM.EmailAddress, "Strategy Successfully Started on " .. zDate .. " at " .. zTime, oMessage);
+		end
+	elseif oType == "OrderExecution" then
+		if FXCM.SendEmailOrderExecution then
+			local zMessageEnd = zDate .. " at " .. zTime; 
+			terminal:alertEmail(FXCM.EmailAddress, oMessage .. zMessageEnd, oMessage .. zMessageEnd);
 		end
 	elseif oType == "All" then
 		terminal:alertMessage(oSymbol, oOpen, oMessage, oTime)
 		Host:trace(oMessage);
-		if FXCM.SendEmail then
+		if FXCM.SendEmailStrategyFailure then
 			terminal:alertEmail(FXCM.EmailAddress, "Review ".. oSymbol .. "; Issue on " .. zDate .. " at " .. zTime, oMessage);
 		end
 	else
@@ -1044,6 +1052,21 @@ function FormatPrecision(oInput, oDecimals)
 	WriteToLog:debug("FormatPips() Finished | " .. zOutput);
 	WriteToLog:info("FormatPips() <<<<< FINISHED <<<<< FINISHED <<<<<"); 
 	return zOutput;
+end
+
+
+function Format_Thousands(aInput, aDecimals)
+	-- Sourced from http://www.gammon.com.au/forum/?id=7805
+	aInput = string.format("%." .. aDecimals .. "f", aInput);
+	
+	local zResult = "";
+	local zSign, zBefore, zAfter = string.match(tostring(aInput), "^([%+%-]?)(%d*)(%.?.*)$")
+	while string.len(zBefore) > 3 do
+		zResult = "," .. string.sub(zBefore, -3, -1) .. zResult;
+		zBefore = string.sub(zBefore, 1, -4);
+	end
+	
+	return zSign .. zBefore .. zResult .. zAfter;
 end
 
 
