@@ -94,3 +94,8 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM post
 ###### 1.4.03192017
 - ***Cosmetic release***
 - Removed hardcoded values to make Github ready
+
+###### 2.0.04122017
+- ***Cosmetic release***
+- Added email notifications for order execution.
+- Updated select default values.

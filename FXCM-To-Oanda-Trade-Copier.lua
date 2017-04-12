@@ -38,7 +38,7 @@
 -- v1.4.03192017:         -> Cosmetic clean up; removed hardcoded values to make Github ready.
 --
 -- v2.0.04122017:         -> Added email notifications for order execution.
---                        -> Updated select defaut values.
+--                        -> Updated select default values.
 --
 --------------------------------------------------------------------------------------------
 
