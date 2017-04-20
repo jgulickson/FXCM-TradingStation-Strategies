@@ -4,7 +4,7 @@
 -- Version:                 1.3.04202017
 -- Format:                  major.minor.mmddyyyy
 --
--- Description:             Proof of concept to calculates and aggregate select values from
+-- Description:             Proof of concept to calculate and aggregate select values from
 --                          user specified FXCM, Oanda and/or Robinhood account(s). Currently
 --                          includes equity, day p/l and leverage though modifying or adding
 --                          additional data points is trivial. Oanda and Robinhood data is sourced
@@ -19,8 +19,8 @@
 --                          Oanda     -> Token
 --                                       // Generated and retrieved from Oanda's online account portal
 --                          Robinhood -> Username + password
---                                       // Token appear to be valid for a session only and thus indicator
---                                       // will acquire token at initialization
+--                                       // Token appears to only be valid for a session only and thus 
+--                                       // the indicator will grab token at initialization
 --
 -- FXCM Documentation:      http://www.fxcodebase.com/bin/products/IndicoreSDK/3.1.0/help/Lua/web-content.html
 -- Oanda Documentation:     http://developer.oanda.com/rest-live-v20/introduction/

@@ -5,7 +5,7 @@
 Repository contains one (1) trading strategy and three (3) non-trading strategies written in Lua and intended to be executed using [FXCM Trading Station](https://www.fxcm.com/uk/platforms/trading-station/innovative-platform/); all three were originally created as proof of concepts. FXCM Trading Station is a financial trading application written for Windows that can leverage scripts written in Lua (and JavaScript) via [Indicore SDK](http://www.fxcodebase.com/bin/products/IndicoreSDK/3.3.0/help/Lua/web-content.html) to further extend functionality.
 
 ###### Investment Dashboard
-Proof of concept to calculates and aggregate select values from user specified FXCM, Oanda and/or Robinhood account(s). Currently includes equity, day p/l and leverage though modifying or adding additional data points is trivial.  Oanda and Robinhood data is sourced via RESTful API queries.  (Requires JSON.lua.)
+Proof of concept to calculate and aggregate select values from user specified FXCM, Oanda and/or Robinhood account(s). Currently includes equity, day p/l and leverage though modifying or adding additional data points is trivial.  Oanda and Robinhood data is sourced via RESTful API queries.  (Requires JSON.lua.)
 
 ###### Hue Lights Control
 Proof of concept to control [Philips Hue](http://www2.meethue.com/en-us/) Lights based on trading activity.
