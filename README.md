@@ -2,7 +2,10 @@
 
 ## Overview
 #### Summary
-Repository contains one (1) trading strategy and two (2) non-trading strategies written in Lua and intended to be executed using [FXCM Trading Station](https://www.fxcm.com/uk/platforms/trading-station/innovative-platform/); all three were originally created as proof of concepts. FXCM Trading Station is a financial trading application written for Windows that can leverage scripts written in Lua (and JavaScript) via [Indicore SDK](http://www.fxcodebase.com/bin/products/IndicoreSDK/3.3.0/help/Lua/web-content.html) to further extend functionality.
+Repository contains one (1) trading strategy and three (3) non-trading strategies written in Lua and intended to be executed using [FXCM Trading Station](https://www.fxcm.com/uk/platforms/trading-station/innovative-platform/); all three were originally created as proof of concepts. FXCM Trading Station is a financial trading application written for Windows that can leverage scripts written in Lua (and JavaScript) via [Indicore SDK](http://www.fxcodebase.com/bin/products/IndicoreSDK/3.3.0/help/Lua/web-content.html) to further extend functionality.
+
+###### Investment Dashboard
+Proof of concept to calculates and aggregate select values from user specified FXCM, Oanda and/or Robinhood account(s). Currently includes equity, day p/l and leverage though modifying or adding additional data points is trivial.  Oanda and Robinhood data is sourced via RESTful API queries.  (Requires JSON.lua.)
 
 ###### Hue Lights Control
 Proof of concept to control [Philips Hue](http://www2.meethue.com/en-us/) Lights based on trading activity.
@@ -11,7 +14,7 @@ Proof of concept to control [Philips Hue](http://www2.meethue.com/en-us/) Lights
 Proof of concept to facilitate of push notifications for trading, account and offer activity.
 
 ###### FXCM To Oanda Trade Copier
-Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM postions are sourced from FXCM Trading Station directly and Oanda positions verified and modified via RESTful API queries.  (Requires JSON.lua.)
+Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM positions are sourced from FXCM Trading Station directly and Oanda positions verified and modified via RESTful API queries.  (Requires JSON.lua.)
 
 ## **Installation**
 1. Clone or download desired *.lua files from this repository.
@@ -35,6 +38,24 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM post
 3. Drap and drop *.lua files onto a Marketscope chart instance.
 
 ## Version History
+#### Investment Dashboard
+###### 1.3.04202017
+- ***Cosmetic release***
+- Made Github ready
+- Removed email functionality
+
+######1.2.04102017
+- ***Cosmetic release***
+- Added side variable to control presentation
+
+###### 1.1.04052017
+- ***Cosmetic release***
+- Added color formatting for values
+- Update x & y coordinates calculation
+
+###### 1.0.03272017
+- ***Initial release***
+- Proof of concept
 
 #### Hue Lights Control
 ###### 1.0.03092015
@@ -96,6 +117,6 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM post
 - Removed hardcoded values to make Github ready
 
 ###### 2.0.04122017
-- ***Cosmetic release***
+- ***Feature release***
 - Added email notifications for order execution.
 - Updated select default values.
