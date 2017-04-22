@@ -10,11 +10,11 @@ Proof of concept to calculate and aggregate select values from user specified FX
 ###### Hue Lights Control
 Proof of concept to control [Philips Hue](http://www2.meethue.com/en-us/) Lights based on trading activity.
 
-###### Push Notifications
-Proof of concept to facilitate of push notifications for trading, account and offer activity.
-
 ###### FXCM To Oanda Trade Copier
 Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM positions are sourced from FXCM Trading Station directly and Oanda positions verified and modified via RESTful API queries.  (Requires JSON.lua.)
+
+###### Push Notifications
+Proof of concept to facilitate of push notifications for trading, account and offer activity.
 
 ## **Installation**
 1. Clone or download desired *.lua files from this repository.
@@ -61,11 +61,49 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM posi
 ###### 1.0.03092015
 - ***Initial release***
 
-#### Push Notifications
-###### 1.0.08142015
+#### FXCM To Oanda Trade Copier
+###### 2.0.04122017
+- ***Feature release***
+- Added email notifications for order execution.
+- Updated select default values.
+
+###### 1.4.03192017
+- ***Cosmetic release***
+- Removed hardcoded values to make Github ready
+
+###### 1.3.02272017
+- ***Feature release***
+- Added email notifications
+
+###### 1.2.02032017
+- ***Feature release***
+- Completed PositionCheck() function, now functional
+
+###### 1.1.02022017
+- ***Feature release***
+- Performance improvements and cosmetic code updates
+- Added ParseResponse() function to parse LUA tables for eventual validation of responses from Oanda.
+- Added CreatePriceBounds() function to use in CreateOrder() to support Oanda's priceBounds parameter (FXCM's market range equivalent).
+- Added PositionCheck() function; currently not functional.
+- Updated log method for improved troubleshooting.  Went from 'Host:trace' to a custom 'WriteToLog:debug' funtion.
+
+###### 1.0.01302017
 - ***Initial release***
-- Support for trading notifications
-- Support for test notifications
+
+#### Push Notifications        
+###### 1.4.07122016
+- ***Cosmetic release***
+- Usability and verbiage improvements
+
+###### 1.3.08262015
+- ***Feature release***
+- Added effective leverage notifications 
+
+###### 1.2.08262015
+- ***Feature release***
+- Added margin call status notifications
+- Added day p/l notifications
+- Added offer notifications
 
 ###### 1.1.08242015
 - ***Feature release***
@@ -78,45 +116,7 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM posi
 - Removed error checking routines
 - Renamed to "Push Notifications"
 
-###### 1.2.08262015
-- ***Feature release***
-- Added margin call status notifications
-- Added day p/l notifications
-- Added offer notifications
-            
-###### 1.3.08262015
-- ***Feature release***
-- Added effective leverage notifications 
-                  
-###### 1.4.07122016
-- ***Cosmetic release***
-- Usability and verbiage improvements
-
-#### FXCM To Oanda Trade Copier
-###### 1.0.01302017
+###### 1.0.08142015
 - ***Initial release***
-
-###### 1.1.02022017
-- ***Feature release***
-- Performance improvements and cosmetic code updates
-- Added ParseResponse() function to parse LUA tables for eventual validation of responses from Oanda.
-- Added CreatePriceBounds() function to use in CreateOrder() to support Oanda's priceBounds parameter (FXCM's market range equivalent).
-- Added PositionCheck() function; currently not functional.
-- Updated log method for improved troubleshooting.  Went from 'Host:trace' to a custom 'WriteToLog:debug' funtion.
-
-###### 1.2.02032017
-- ***Feature release***
-- Completed PositionCheck() function, now functional
-
-###### 1.3.02272017
-- ***Feature release***
-- Added email notifications
-
-###### 1.4.03192017
-- ***Cosmetic release***
-- Removed hardcoded values to make Github ready
-
-###### 2.0.04122017
-- ***Feature release***
-- Added email notifications for order execution.
-- Updated select default values.
+- Support for trading notifications
+- Support for test notifications
