@@ -44,7 +44,7 @@ Proof of concept to facilitate of push notifications for trading, account and of
 - Made Github ready
 - Removed email functionality
 
-######1.2.04102017
+###### 1.2.04102017
 - ***Cosmetic release***
 - Added side variable to control presentation
 
