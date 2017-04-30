@@ -429,7 +429,7 @@ end
 -- Create Robinhood URL Function
 --------------------------------------------------------------------------------------------
 
-function Create_Robinhood_URL_Syntax(aEndpoint, aEndpoint_Type, aSubdomain, oAccount_ID, aOrder_ID, aTrade_ID, aInstrument)
+function Create_Robinhood_URL_Syntax(aEndpoint, aEndpoint_Type, aSubdomain, aAccount_ID, aOrder_ID, aTrade_ID, aInstrument)
 	local zBase_URL = "https://" .. aSubdomain .. "/";
 	local zComplete_URL = nil;
 	
@@ -457,8 +457,8 @@ end
 -- Create Oanda URL Function
 --------------------------------------------------------------------------------------------
 
-function Create_Oanda_URL_Syntax(aEndpoint, aEndpoint_Type, aSubdomain, oAccount_ID, aOrder_ID, aTrade_ID, aInstrument)
-	local zBase_URL = "https://" .. aSubdomain .. "/v3/accounts/" .. oAccount_ID;
+function Create_Oanda_URL_Syntax(aEndpoint, aEndpoint_Type, aSubdomain, aAccount_ID, aOrder_ID, aTrade_ID, aInstrument)
+	local zBase_URL = "https://" .. aSubdomain .. "/v3/accounts/" .. aAccount_ID;
 	local zComplete_URL = nil;
 	
 	if aEndpoint == "Account" then
@@ -520,10 +520,10 @@ end
 -- Encode Response Function
 --------------------------------------------------------------------------------------------
 
-function Encode_Request(oRequest)
+function Encode_Request(aRequest)
 	JSON = assert(loadfile "JSON.lua")();
-	oRequest = JSON:encode(oRequest);
-	return oRequest;
+	aRequest = JSON:encode(aRequest);
+	return aRequest;
 end
 
 
@@ -531,10 +531,10 @@ end
 -- Decode Response Function
 --------------------------------------------------------------------------------------------
 
-function Decode_Response(oResponse)
+function Decode_Response(aResponse)
 	JSON = assert(loadfile "JSON.lua")();
-	oResponse = JSON:decode(oResponse);
-	return oResponse;
+	aResponse = JSON:decode(aResponse);
+	return aResponse;
 end
 
 
@@ -542,12 +542,12 @@ end
 -- Parse Robinhood Response Function
 --------------------------------------------------------------------------------------------
 
-function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, oResponse)
+function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, aResponse)
 	if oEndpoint == "Authentication" then
 		if oEndpoint_Type == "POST_Login" then
 			local POST_Login = {};
-			if pcall(function () POST_Login.Token = tostring(oResponse["token"]); end) then
-				POST_Login.Token = tostring(oResponse["token"]);
+			if pcall(function () POST_Login.Token = tostring(aResponse["token"]); end) then
+				POST_Login.Token = tostring(aResponse["token"]);
 			else POST_Login.Token = nil; end
 			return POST_Login;
 		else
@@ -556,8 +556,8 @@ function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, oResponse)
 	elseif oEndpoint == "Accounts" then
 		if oEndpoint_Type == "GET_Accounts" then
 			local GET_Accounts = {};
-			if pcall(function () GET_Accounts.Portfolio_URL = tostring(oResponse["results"][1]["portfolio"]); end) then
-				GET_Accounts.Portfolio_URL = tostring(oResponse["results"][1]["portfolio"]);
+			if pcall(function () GET_Accounts.Portfolio_URL = tostring(aResponse["results"][1]["portfolio"]); end) then
+				GET_Accounts.Portfolio_URL = tostring(aResponse["results"][1]["portfolio"]);
 			else GET_Accounts.Portfolio_URL = nil; end
 			return GET_Accounts;
 		else
@@ -566,14 +566,14 @@ function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, oResponse)
 	elseif oEndpoint == "Portfolio" then
 		if oEndpoint_Type == "GET_Portfolio" then
 			local GET_Portfolio = {};
-			if pcall(function () GET_Portfolio.Equity = tostring(oResponse["equity"]); end) then
-				GET_Portfolio.Equity = tostring(oResponse["equity"]);
+			if pcall(function () GET_Portfolio.Equity = tostring(aResponse["equity"]); end) then
+				GET_Portfolio.Equity = tostring(aResponse["equity"]);
 			else GET_Portfolio.Equity = nil; end
-			if pcall(function () GET_Portfolio.Start_Equity = tostring(oResponse["equity_previous_close"]); end) then
-				GET_Portfolio.Start_Equity = tostring(oResponse["equity_previous_close"]);
+			if pcall(function () GET_Portfolio.Start_Equity = tostring(aResponse["equity_previous_close"]); end) then
+				GET_Portfolio.Start_Equity = tostring(aResponse["equity_previous_close"]);
 			else GET_Portfolio.Start_Equity = nil; end
-			if pcall(function () GET_Portfolio.Size_In_USD = tostring(oResponse["market_value"]); end) then
-				GET_Portfolio.Size_In_USD = tostring(oResponse["market_value"]);
+			if pcall(function () GET_Portfolio.Size_In_USD = tostring(aResponse["market_value"]); end) then
+				GET_Portfolio.Size_In_USD = tostring(aResponse["market_value"]);
 			else GET_Portfolio.Size_In_USD = nil; end
 			return GET_Portfolio;
 		else
@@ -589,18 +589,18 @@ end
 -- Parse Oanda Response Function
 --------------------------------------------------------------------------------------------
 
-function Parse_Oanda_Response(oEndpoint, oEndpoint_Type, oResponse)
-	if oEndpoint == "Account" then
-		if oEndpoint_Type == "GET_Summary" then
+function Parse_Oanda_Response(aEndpoint, aEndpoint_Type, aResponse)
+	if aEndpoint == "Account" then
+		if aEndpoint_Type == "GET_Summary" then
 			local GET_Summary = {};
-			if pcall(function () GET_Summary.NAV = tostring(oResponse["account"]["NAV"]); end) then
-				GET_Summary.NAV = tostring(oResponse["account"]["NAV"]);
+			if pcall(function () GET_Summary.NAV = tostring(aResponse["account"]["NAV"]); end) then
+				GET_Summary.NAV = tostring(aResponse["account"]["NAV"]);
 			else GET_Summary.NAV = nil; end
-			if pcall(function () GET_Summary.Size_In_USD = tostring(oResponse["account"]["positionValue"]); end) then 
-				GET_Summary.Size_In_USD = tostring(oResponse["account"]["positionValue"]);
+			if pcall(function () GET_Summary.Size_In_USD = tostring(aResponse["account"]["positionValue"]); end) then 
+				GET_Summary.Size_In_USD = tostring(aResponse["account"]["positionValue"]);
 			else GET_Summary.Size_In_USD = nil; end
-			if pcall(function () GET_Summary.Unrealized_PL = tostring(oResponse["account"]["unrealizedPL"]); end) then 
-				GET_Summary.Unrealized_PL = tostring(oResponse["account"]["unrealizedPL"]);
+			if pcall(function () GET_Summary.Unrealized_PL = tostring(aResponse["account"]["unrealizedPL"]); end) then 
+				GET_Summary.Unrealized_PL = tostring(aResponse["account"]["unrealizedPL"]);
 			else GET_Summary.Unrealized_PL = nil; end
 			return GET_Summary;
 		else

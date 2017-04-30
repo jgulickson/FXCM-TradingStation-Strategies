@@ -17,7 +17,7 @@ Designed to copy postion(s) from an FXCM account to an Oanda account.  FXCM posi
 Proof of concept to facilitate of push notifications for trading, account and offer activity.
 
 ## **Installation**
-1. Clone or download desired *.lua files from this repository.
+1. Clone or download desired *.lua files from this repository. (Note that 'Investment Dashboard' and 'FXCM To Oanda Trade Copier' require JSON.lua.)
 
 2. Move *.lua files to the following directory depending on 32 or 64 bit OS version:
 
@@ -31,7 +31,7 @@ Proof of concept to facilitate of push notifications for trading, account and of
 
 *OR*
 
-1. Clone or download desired *.lua files from this repository.
+1. Clone or download desired *.lua files from this repository. (Note that 'Investment Dashboard' and 'FXCM To Oanda Trade Copier' require JSON.lua.)
 
 2. If not running, open FXCM Trading Station.
 
