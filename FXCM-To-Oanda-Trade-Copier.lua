@@ -82,7 +82,6 @@ local Timer = {};
 Timer.HealthCheck = nil;
 Timer.SendRequest = nil;
 Timer.PositionCheckInterval = nil;
-Timer.PositionCheckNew = nil;
 
 --------------------------------------------------------------------------------------------
 -- Initialize Function
@@ -396,7 +395,7 @@ function CreateOrder(oInstrument, oSize, oDirection)
 		StopStrategy = true;
 	end
 	
-	Timer.PositionCheckNew = Host:execute("setTimer", 201, 5);
+	PositionCheck(oInstrument);
 end
 
 
@@ -1096,12 +1095,6 @@ function AsyncOperationFinished(oReference, oSuccess, oMessage, oMessage1, oMess
 		if not StopStrategy then
 			PositionCheck(FXCM.SymbolToTrack);
 			WriteToLog:debug("AsyncOperationFinished() Finished | Ran PositionCheck()");
-		end
-	elseif oReference == 201 then
-		if not StopStrategy then
-			Host:execute("killTimer", Timer.PositionCheckNew);
-			PositionCheck(FXCM.SymbolToTrack);
-			WriteToLog:debug("AsyncOperationFinished() Finished | Ran PositionCheck(), Killed Timer.PositionCheckNew");
 		end
 	elseif oReference == 300 then
 		if not StopStrategy then
