@@ -1,7 +1,7 @@
 ---------------------------------------- Overview ------------------------------------------
 -- Name:                  FXCM To Oanda Trade Copier
 -- Notes:                 Copyright (c) 2017 Jeremy Gulickson
--- Version:               2.0.04122017
+-- Version:               2.1.05112017
 -- Format:                major.minor.mmddyyyy
 -- 
 -- Usage:                 Designed to copy postion(s) from an FXCM account to an Oanda account.
@@ -39,6 +39,9 @@
 --
 -- v2.0.04122017:         -> Added email notifications for order execution.
 --                        -> Updated select default values.
+--                   
+-- v2.1.05112017:         -> Removed hardcoded values in AsyncOperationFinished() and
+--                             updated to FXCM.SymbolToTrack.
 --
 --------------------------------------------------------------------------------------------
 
@@ -72,7 +75,8 @@ FXCM.AccountID = nil;
 FXCM.SendEmailOrderExecution = nil;
 FXCM.SendEmailStrategyFailure = nil;
 FXCM.EmailAddress = nil;
-	
+FXCM.SymbolToTrack = nil;
+
 -- Global Timer variables
 local Timer = {};
 Timer.HealthCheck = nil;
@@ -144,6 +148,7 @@ function Prepare()
 	FXCM.SendEmailOrderExecution = instance.parameters.SendEmailOrderExecution;
 	FXCM.SendEmailStrategyFailure = instance.parameters.SendEmailStrategyFailure;
 	FXCM.EmailAddress = instance.parameters.EmailAddress;
+	FXCM.SymbolToTrack = instance.bid:instrument();
 	
 	instance:name("FXCM (" .. FXCM.AccountID .. ") to Oanda (" .. Oanda.AccountID .. ")");
 	
@@ -1081,21 +1086,21 @@ function AsyncOperationFinished(oReference, oSuccess, oMessage, oMessage1, oMess
 	if oReference == 100 then
 		if not StopStrategy then
 			Host:execute("killTimer", Timer.HealthCheck);
-			HealthCheck("GBP/JPY");
-			PositionCheck("GBP/JPY");
+			HealthCheck(FXCM.SymbolToTrack);
+			PositionCheck(FXCM.SymbolToTrack);
 			WriteToLog:debug("AsyncOperationFinished() Finished | Ran HealthCheck(), Ran PositionCheck(), Killed Timer.HealthCheck");
 		else
 			Host:execute("killTimer", Timer.HealthCheck);
 		end
 	elseif oReference == 200 then
 		if not StopStrategy then
-			PositionCheck("GBP/JPY");
+			PositionCheck(FXCM.SymbolToTrack);
 			WriteToLog:debug("AsyncOperationFinished() Finished | Ran PositionCheck()");
 		end
 	elseif oReference == 201 then
 		if not StopStrategy then
 			Host:execute("killTimer", Timer.PositionCheckNew);
-			PositionCheck("GBP/JPY");
+			PositionCheck(FXCM.SymbolToTrack);
 			WriteToLog:debug("AsyncOperationFinished() Finished | Ran PositionCheck(), Killed Timer.PositionCheckNew");
 		end
 	elseif oReference == 300 then

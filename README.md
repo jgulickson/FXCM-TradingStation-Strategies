@@ -63,6 +63,9 @@ Proof of concept to facilitate of push notifications for trading, account and of
 
 #### FXCM To Oanda Trade Copier
 ###### 2.0.04122017
+- ***Bug Fix release***
+- Removed hardcoded values in AsyncOperationFinished() and updated to FXCM.SymbolToTrack.
+###### 2.0.04122017
 - ***Feature release***
 - Added email notifications for order execution.
 - Updated select default values.
