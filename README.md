@@ -1,4 +1,4 @@
-# FX-TradingStation-Strategies
+# FXCM-TradingStation-Strategies
 
 ## Overview
 #### Summary
