@@ -1,7 +1,7 @@
 ---------------------------------------- Overview ------------------------------------------
 -- Name:                    Investment Dashboard
 -- Notes:                   Copyright (c) 2017 Jeremy Gulickson
--- Version:                 1.3.04202017
+-- Version:                 1.4.08032017
 -- Format:                  major.minor.mmddyyyy
 --
 -- Description:             Proof of concept to calculate and aggregate select values from
@@ -26,7 +26,8 @@
 -- Oanda Documentation:     http://developer.oanda.com/rest-live-v20/introduction/
 -- Robinhood Documentation: https://github.com/sanko/Robinhood
 --
--- Know Limitations:        -> Does not support 2FA for either Oanda or Robinhood accounts
+-- Know Limitations:        -> Does not support 2FA for either Oanda accounts
+--                          -> 2FA for Robhinhood account is clunky
 --                          -> Oanda account must be type v20
 --                          -> Robinhood API is undocumented and therefore unannounced changes
 --                             may break funtionality
@@ -47,6 +48,10 @@
 -- v1.3.04202017:           Cosmetic Release
 --                          -> Made Github ready
 --                          -> Removed email functionality
+--
+-- v1.4.08032017:           Feature Release
+--                          -> Updated Robinhood data to include extended hours values
+--                          -> Added Robinhood support for 2 factor authentication
 --
 --------------------------------------------------------------------------------------------
 
@@ -73,6 +78,9 @@ Oanda.API_Token = nil;
 
 -- Global Robinhood variables
 local Robinhood = {};
+Robinhood.TFA_Mode = nil;
+Robinhood.TFA_Type = nil;
+Robinhood.TFA_Code = nil;
 Robinhood.URL = "api.robinhood.com"
 Robinhood.Portfolio_URL = nil;
 Robinhood.Account_ID = nil;
@@ -130,6 +138,8 @@ function Init()
 	indicator.parameters:addGroup("Robinhood");
 	indicator.parameters:addString("Robinhood_Account_ID", "Account ID", "Enter the account id to monitor.", "");
 	indicator.parameters:addString("Robinhood_Password", "Password", "Enter the password.", "");
+	indicator.parameters:addBoolean("Robinhood_TFA_Mode", "2FA Mode", "Enable two factor authentication mode.", true);
+	indicator.parameters:addString("Robinhood_TFA_Code", "2FA Code", "Enter the two factor authentication code.", "");
 	
 	indicator.parameters:addGroup("Oanda");
 	indicator.parameters:addString("Oanda_Account_ID", "Account ID", "Enter the account id to monitor.", "");
@@ -162,6 +172,8 @@ function Prepare()
 	
 	Robinhood.Account_ID = instance.parameters.Robinhood_Account_ID;
 	Robinhood.Password = instance.parameters.Robinhood_Password;
+	Robinhood.TFA_Mode = instance.parameters.Robinhood_TFA_Mode;
+	Robinhood.TFA_Code = instance.parameters.Robinhood_TFA_Code;
 	
 	Oanda.Account_ID = instance.parameters.Oanda_Account_ID;
 	if instance.parameters.Oanda_Account_Type == "Real" then
@@ -178,15 +190,24 @@ function Prepare()
 	Font.Day_PL = core.host:execute("createFont", "Verdana", 30, false, false);
 	Font.Leverage = core.host:execute("createFont", "Verdana", 30, false, false);
 	
-	Get_Robinhood_API_Token();
-	Get_Robinhood_Portfolio_URL();
-	Get_Robinhood_Account_Data();
+	if not Robinhood.TFA_Mode then
+		Get_Robinhood_API_Token();
+		Get_Robinhood_Portfolio_URL();
+		Get_Robinhood_Account_Data();
+	else
+		Get_Robinhood_API_Token_TFA_Step_1()
+		if Robinhood.TFA_Code ~= "" then
+			Get_Robinhood_API_Token_TFA_Step_2();
+			Get_Robinhood_Portfolio_URL();
+			Get_Robinhood_Account_Data();
+		end
+	end
 	Get_Oanda_Account_Data();
 	Get_FXCM_Account_Data();
 end
 
 
------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
 -- Get Robinhood API Token
 --------------------------------------------------------------------------------------------
 
@@ -200,7 +221,40 @@ function Get_Robinhood_API_Token()
 end
 
 
------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+-- Get Robinhood API Token Two Factor Authentication Step 1
+--------------------------------------------------------------------------------------------
+
+function Get_Robinhood_API_Token_TFA_Step_1()
+	local zURL = Create_Robinhood_URL_Syntax("Authentication", "POST_Login", Robinhood.URL, nil, nil, nil, nil);
+	local zAuthentication = {};
+	zAuthentication.username = Robinhood.Account_ID;
+	zAuthentication.password = Robinhood.Password;
+	local zResponse = Send_Request("Robinhood", "POST", zURL, nil, nil , nil, Encode_Request(zAuthentication));
+	Robinhood.TFA_Type = Parse_Robinhood_Response("Authentication", "POST_Login", Decode_Response(zResponse)).TFA_Type;
+end
+
+
+--------------------------------------------------------------------------------------------
+-- Get Robinhood API Token Two Factor Authentication Step 2
+--------------------------------------------------------------------------------------------
+
+function Get_Robinhood_API_Token_TFA_Step_2()
+	if Robinhood.TFA_Type == "sms" then
+		local zURL = Create_Robinhood_URL_Syntax("Authentication", "POST_Login", Robinhood.URL, nil, nil, nil, nil);
+		local zAuthentication = {};
+		zAuthentication.username = Robinhood.Account_ID;
+		zAuthentication.password = Robinhood.Password;
+		zAuthentication.mfa_code = Robinhood.TFA_Code;
+		local zResponse = Send_Request("Robinhood", "POST", zURL, nil, nil , nil, Encode_Request(zAuthentication));
+		Robinhood.API_Token = Parse_Robinhood_Response("Authentication", "POST_Login", Decode_Response(zResponse)).Token;
+	else
+		Send_Notification("Alert", "", 0, "Get_Robinhood_API_Token_TFA_Step_2() Failed | In Else Clause", core.now(), "");
+	end
+end
+
+
+--------------------------------------------------------------------------------------------
 -- Get Robinhood Portfolio URL
 --------------------------------------------------------------------------------------------
 
@@ -549,6 +603,9 @@ function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, aResponse)
 			if pcall(function () POST_Login.Token = tostring(aResponse["token"]); end) then
 				POST_Login.Token = tostring(aResponse["token"]);
 			else POST_Login.Token = nil; end
+			if pcall(function () POST_Login.TFA_Type = tostring(aResponse["mfa_type"]); end) then
+				POST_Login.TFA_Type = tostring(aResponse["mfa_type"]);
+			else POST_Login.TFA_Type = nil; end
 			return POST_Login;
 		else
 			Send_Notification("Alert", "", 0, "Parse_Robinhood_Response() Failed | In Sub Else Clause", core.now(), "");
@@ -568,13 +625,28 @@ function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, aResponse)
 			local GET_Portfolio = {};
 			if pcall(function () GET_Portfolio.Equity = tostring(aResponse["equity"]); end) then
 				GET_Portfolio.Equity = tostring(aResponse["equity"]);
-			else GET_Portfolio.Equity = nil; end
+			else GET_Accounts.Equity = nil; end
+			if pcall(function () GET_Portfolio.Extened_Hours_Equity = tostring(aResponse["extended_hours_equity"]); end) then
+				GET_Portfolio.Extened_Hours_Equity = tostring(aResponse["extended_hours_equity"]);
+			else GET_Accounts.Extened_Hours_Equity = nil; end
+			if GET_Portfolio.Extened_Hours_Equity ~= nil and GET_Portfolio.Extened_Hours_Equity ~= "null" then
+				GET_Portfolio.Equity = GET_Portfolio.Extened_Hours_Equity
+			end
+			
 			if pcall(function () GET_Portfolio.Start_Equity = tostring(aResponse["equity_previous_close"]); end) then
 				GET_Portfolio.Start_Equity = tostring(aResponse["equity_previous_close"]);
 			else GET_Portfolio.Start_Equity = nil; end
+
 			if pcall(function () GET_Portfolio.Size_In_USD = tostring(aResponse["market_value"]); end) then
 				GET_Portfolio.Size_In_USD = tostring(aResponse["market_value"]);
-			else GET_Portfolio.Size_In_USD = nil; end
+			else GET_Accounts.Size_In_USD = nil; end
+			if pcall(function () GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_market_value"]); end) then
+				GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_market_value"]);
+			else GET_Accounts.Extened_Hours_Size_In_USD = nil; end
+			if GET_Portfolio.Extened_Hours_Size_In_USD ~= nil and GET_Portfolio.Extened_Hours_Size_In_USD ~= "null" then
+				GET_Portfolio.Size_In_USD = GET_Portfolio.Extened_Hours_Equity
+			end
+	
 			return GET_Portfolio;
 		else
 			Send_Notification("Alert", "", 0, "Parse_Robinhood_Response() Failed | In Sub Else Clause", core.now(), "");
