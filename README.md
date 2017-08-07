@@ -39,6 +39,11 @@ Proof of concept to facilitate of push notifications for trading, account and of
 
 ## Version History
 #### Investment Dashboard
+###### 1.5.08072017
+- ***Bug fix release***
+- Improved Robinhood 2 factor authentication experience
+- Addressed issues with Robinhood extended hours values not populating from server
+
 ###### 1.4.08032017
 - ***Feature release***
 - Updated Robinhood data to include extended hours values

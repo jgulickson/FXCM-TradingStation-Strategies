@@ -1,7 +1,7 @@
 ---------------------------------------- Overview ------------------------------------------
 -- Name:                    Investment Dashboard
 -- Notes:                   Copyright (c) 2017 Jeremy Gulickson
--- Version:                 1.4.08032017
+-- Version:                 1.5.08072017
 -- Format:                  major.minor.mmddyyyy
 --
 -- Description:             Proof of concept to calculate and aggregate select values from
@@ -18,7 +18,7 @@
 --                                       // Note this is entered in FXTS not in indicator options
 --                          Oanda     -> Token
 --                                       // Generated and retrieved from Oanda's online account portal
---                          Robinhood -> Username + password
+--                          Robinhood -> Username + password + 2FA code (optional)
 --                                       // Token appears to only be valid for a session only and thus 
 --                                       // the indicator will grab token at initialization
 --
@@ -26,8 +26,8 @@
 -- Oanda Documentation:     http://developer.oanda.com/rest-live-v20/introduction/
 -- Robinhood Documentation: https://github.com/sanko/Robinhood
 --
--- Know Limitations:        -> Does not support 2FA for either Oanda accounts
---                          -> 2FA for Robhinhood account is clunky
+-- Know Limitations:        -> Does not support 2FA for Oanda accounts
+--                          -> 2FA support for Robhinhood accounts is clunky
 --                          -> Oanda account must be type v20
 --                          -> Robinhood API is undocumented and therefore unannounced changes
 --                             may break funtionality
@@ -52,6 +52,10 @@
 -- v1.4.08032017:           Feature Release
 --                          -> Updated Robinhood data to include extended hours values
 --                          -> Added Robinhood support for 2 factor authentication
+--
+-- v1.5.08072017            Bug Fix Release
+--                          -> Improved Robinhood 2 factor authentication experience
+--                          -> Addressed issues with Robinhood extended hours values not populating from server
 --
 --------------------------------------------------------------------------------------------
 
@@ -93,6 +97,7 @@ FXCM.Account_ID = nil;
 
 -- Global timer variables
 local Timer = {};
+Timer.Initialized = nil;
 Timer.Send_Request = nil;
 Timer.Update_Frequency = nil;
 
@@ -161,7 +166,8 @@ end
 function Prepare()
 	instance:name("Investment Dashboard");
 	
-	Timer.Update_Frequency = core.host:execute("setTimer", 100, instance.parameters.Update_Frequency * 60);
+	Timer.Initialized = core.host:execute("setTimer", 100, 10);
+	Timer.Update_Frequency = core.host:execute("setTimer", 200, instance.parameters.Update_Frequency * 60);
 
 	Format.Equity = instance.parameters.Format_Equity;
 	Format.Leverage = instance.parameters.Format_Leverage;
@@ -173,6 +179,7 @@ function Prepare()
 	Robinhood.Account_ID = instance.parameters.Robinhood_Account_ID;
 	Robinhood.Password = instance.parameters.Robinhood_Password;
 	Robinhood.TFA_Mode = instance.parameters.Robinhood_TFA_Mode;
+	if Robinhood.TFA_Mode then Get_Robinhood_API_Token_TFA_Step_1(); end
 	Robinhood.TFA_Code = instance.parameters.Robinhood_TFA_Code;
 	
 	Oanda.Account_ID = instance.parameters.Oanda_Account_ID;
@@ -189,21 +196,6 @@ function Prepare()
 	Font.Floating_PL = core.host:execute("createFont", "Verdana", 30, false, false);
 	Font.Day_PL = core.host:execute("createFont", "Verdana", 30, false, false);
 	Font.Leverage = core.host:execute("createFont", "Verdana", 30, false, false);
-	
-	if not Robinhood.TFA_Mode then
-		Get_Robinhood_API_Token();
-		Get_Robinhood_Portfolio_URL();
-		Get_Robinhood_Account_Data();
-	else
-		Get_Robinhood_API_Token_TFA_Step_1()
-		if Robinhood.TFA_Code ~= "" then
-			Get_Robinhood_API_Token_TFA_Step_2();
-			Get_Robinhood_Portfolio_URL();
-			Get_Robinhood_Account_Data();
-		end
-	end
-	Get_Oanda_Account_Data();
-	Get_FXCM_Account_Data();
 end
 
 
@@ -270,7 +262,7 @@ end
 --------------------------------------------------------------------------------------------
 
 function Update()
-	-- Not Employed
+	-- Not employed
 end
 
 
@@ -629,8 +621,8 @@ function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, aResponse)
 			if pcall(function () GET_Portfolio.Extened_Hours_Equity = tostring(aResponse["extended_hours_equity"]); end) then
 				GET_Portfolio.Extened_Hours_Equity = tostring(aResponse["extended_hours_equity"]);
 			else GET_Accounts.Extened_Hours_Equity = nil; end
-			if GET_Portfolio.Extened_Hours_Equity ~= nil and GET_Portfolio.Extened_Hours_Equity ~= "null" then
-				GET_Portfolio.Equity = GET_Portfolio.Extened_Hours_Equity
+			if not string.match(GET_Portfolio.Extened_Hours_Equity, "%a") then
+				GET_Portfolio.Equity = GET_Portfolio.Extened_Hours_Equity;
 			end
 			
 			if pcall(function () GET_Portfolio.Start_Equity = tostring(aResponse["equity_previous_close"]); end) then
@@ -641,10 +633,10 @@ function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, aResponse)
 				GET_Portfolio.Size_In_USD = tostring(aResponse["market_value"]);
 			else GET_Accounts.Size_In_USD = nil; end
 			if pcall(function () GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_market_value"]); end) then
-				GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_market_value"]);
+				GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_equity"]);
 			else GET_Accounts.Extened_Hours_Size_In_USD = nil; end
-			if GET_Portfolio.Extened_Hours_Size_In_USD ~= nil and GET_Portfolio.Extened_Hours_Size_In_USD ~= "null" then
-				GET_Portfolio.Size_In_USD = GET_Portfolio.Extened_Hours_Equity
+			if not string.match(GET_Portfolio.Extened_Hours_Size_In_USD, "%a") then
+				GET_Portfolio.Size_In_USD = GET_Portfolio.Extened_Hours_Size_In_USD;
 			end
 	
 			return GET_Portfolio;
@@ -753,6 +745,17 @@ end
 
 function AsyncOperationFinished(aReference, aSuccess, aMessage, aMessage1, aMessage2)
 	if aReference == 100 then
+		if not Robinhood.TFA_Mode then
+			Get_Robinhood_API_Token();
+		else
+			Get_Robinhood_API_Token_TFA_Step_2();
+		end
+		Get_Robinhood_Portfolio_URL();
+		Get_Robinhood_Account_Data();
+		Get_Oanda_Account_Data();
+		Get_FXCM_Account_Data();
+		core.host:execute("killTimer", Timer.Initialized);
+	elseif aReference == 200 then
 		Get_Robinhood_Account_Data();
 		Get_Oanda_Account_Data();
 		Get_FXCM_Account_Data();
