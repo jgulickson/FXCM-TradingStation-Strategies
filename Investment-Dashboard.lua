@@ -1,7 +1,7 @@
 ---------------------------------------- Overview ------------------------------------------
 -- Name:                    Investment Dashboard
 -- Notes:                   Copyright (c) 2017 Jeremy Gulickson
--- Version:                 1.5.08072017
+-- Version:                 1.6.08312017
 -- Format:                  major.minor.mmddyyyy
 --
 -- Description:             Proof of concept to calculate and aggregate select values from
@@ -56,6 +56,9 @@
 -- v1.5.08072017            Bug Fix Release
 --                          -> Improved Robinhood 2 factor authentication experience
 --                          -> Addressed issues with Robinhood extended hours values not populating from server
+--
+-- v1.6.08312017            Bug Fix Release
+--                          -> Addressed issues with Robinhood leverage values
 --
 --------------------------------------------------------------------------------------------
 
@@ -428,12 +431,21 @@ function Get_Robinhood_Account_Data()
 	local zStart_Equity = Parse_Robinhood_Response("Portfolio", "GET_Portfolio", Decode_Response(zResponse)).Start_Equity;
 	local zSize_In_USD = Parse_Robinhood_Response("Portfolio", "GET_Portfolio", Decode_Response(zResponse)).Size_In_USD;
 	
-	local zDay_PL = zEquity - zStart_Equity;
+	local zDay_PL
 	local zLeverage = nil;
-	if zEquity ~= nil and zSize_In_USD ~= nil then
-		zLeverage = zSize_In_USD / zEquity;
-	else zLeverage = "0"; end
-
+	if pcall(function () zDay_PL = zEquity - zStart_Equity; end) then
+		zDay_PL = zEquity - zStart_Equity;
+		if zEquity ~= nil and zSize_In_USD ~= nil then
+			zLeverage = zSize_In_USD / zEquity;
+		else
+			zLeverage = "0";
+		end
+	else
+		zDay_PL = nil;
+		zEquity  = nil;
+		zStart_Equity  = nil;
+	end
+		
 	Update_Display("Robinhood", zEquity, zDay_PL, nil, zLeverage);
 end
 
@@ -451,10 +463,9 @@ function Get_Oanda_Account_Data()
 	local zSize_In_USD = Parse_Oanda_Response("Account", "GET_Summary", Decode_Response(zReponse)).Size_In_USD;
 
 	local zLeverage = nil;
-	if zEquity ~= nil and zSize_In_USD ~= nil then
+	if pcall(function () zLeverage = zSize_In_USD / zEquity; end) then
 		zLeverage = zSize_In_USD / zEquity;
-	else zLeverage = "0"; end
-
+	end
 	Update_Display("Oanda", zEquity, nil, zFloating_PL, zLeverage);
 end
 	
@@ -633,7 +644,7 @@ function Parse_Robinhood_Response(oEndpoint, oEndpoint_Type, aResponse)
 				GET_Portfolio.Size_In_USD = tostring(aResponse["market_value"]);
 			else GET_Accounts.Size_In_USD = nil; end
 			if pcall(function () GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_market_value"]); end) then
-				GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_equity"]);
+				GET_Portfolio.Extened_Hours_Size_In_USD = tostring(aResponse["extended_hours_market_value"]);
 			else GET_Accounts.Extened_Hours_Size_In_USD = nil; end
 			if not string.match(GET_Portfolio.Extened_Hours_Size_In_USD, "%a") then
 				GET_Portfolio.Size_In_USD = GET_Portfolio.Extened_Hours_Size_In_USD;

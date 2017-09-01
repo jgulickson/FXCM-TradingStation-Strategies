@@ -39,6 +39,10 @@ Proof of concept to facilitate of push notifications for trading, account and of
 
 ## Version History
 #### Investment Dashboard
+###### 1.6.08312017
+- ***Bug fix release***
+- Addressed issues with Robinhood leverage values
+
 ###### 1.5.08072017
 - ***Bug fix release***
 - Improved Robinhood 2 factor authentication experience
